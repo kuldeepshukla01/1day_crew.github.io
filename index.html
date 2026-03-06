@@ -603,25 +603,49 @@
     </section>
 
     <!-- Contact -->
-    <section id="contact">
-      <h2 class="section-title">/contact</h2>
-      <div class="contact-panel glass">
-        <p>Got a challenge? Let's hack together. Send a message:</p>
-        <form onsubmit="return false;">
-          <div class="form-group">
-            <input type="text" placeholder="Your Handle" required>
-          </div>
-          <div class="form-group">
-            <input type="email" placeholder="Your Email" required>
-          </div>
-          <div class="form-group">
-            <textarea placeholder="Your Message" required></textarea>
-          </div>
-          <button type="submit" class="btn-submit"><span>SEND TRANSMISSION &gt;</span></button>
-        </form>
+   <section id="contact">
+  <h2 class="section-title">/contact</h2>
+  <div class="contact-panel glass">
+    <p>Got a challenge? Let's hack together. Send a message:</p>
+    <form id="contact-form">
+      <div class="form-group">
+        <input type="text" name="handle" placeholder="Your Handle" required>
       </div>
-    </section>
+      <div class="form-group">
+        <input type="email" name="email" placeholder="Your Email" required>
+      </div>
+      <div class="form-group">
+        <textarea name="message" placeholder="Your Message" required></textarea>
+      </div>
+      <button type="submit" class="btn-submit"><span>SEND TRANSMISSION &gt;</span></button>
+    </form>
+    <p id="status" style="margin-top:1rem;font-weight:bold;"></p>
+  </div>
+</section>
 
+<!-- Include EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<script>
+  // Initialize EmailJS
+  emailjs.init("S_prJ5TjZ3DcUdmQW"); // ← replace with your EmailJS public key
+
+  const form = document.getElementById('contact-form');
+  const status = document.getElementById('status');
+
+  form.addEventListener('submit', function(event) {
+    event.preventDefault(); // prevent default form submission
+
+    // Send the form using EmailJS
+    emailjs.sendForm('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', this)
+      .then(() => {
+        status.innerText = "Message sent successfully to kuldeepshuklan@outlook.com!";
+        form.reset();
+      }, (err) => {
+        status.innerText = "Failed to send message. Please try again.";
+        console.error(err);
+      });
+  });
+</script>
     <!-- Footer -->
     <footer>
       <div class="prompt-line">root@matrix:~# <span class="blink">cat /etc/motd</span></div>
