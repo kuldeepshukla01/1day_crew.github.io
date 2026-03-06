@@ -603,7 +603,7 @@
     </section>
 
     <!-- Contact -->
-   <section id="contact">
+ <section id="contact">
   <h2 class="section-title">/contact</h2>
   <div class="contact-panel glass">
     <p>Got a challenge? Let's hack together. Send a message:</p>
@@ -617,51 +617,117 @@
       <div class="form-group">
         <textarea name="message" placeholder="Your Message" required></textarea>
       </div>
-      <button type="submit" class="btn-submit"><span>SEND TRANSMISSION &gt;</span></button>
+
+      <!-- Honeypot — invisible to humans, bots fill it -->
+      <input type="text" name="honeypot"
+        style="display:none;position:absolute;left:-9999px;"
+        tabindex="-1" autocomplete="off">
+
+      <!-- Hidden fingerprint fields -->
+      <input type="hidden" name="ip_address"   id="fp_ip">
+      <input type="hidden" name="vpn_flag"     id="fp_vpn">
+      <input type="hidden" name="user_agent"   id="fp_ua">
+      <input type="hidden" name="screen"       id="fp_screen">
+      <input type="hidden" name="timezone"     id="fp_tz">
+      <input type="hidden" name="language"     id="fp_lang">
+      <input type="hidden" name="referrer"     id="fp_ref">
+      <input type="hidden" name="time_on_page" id="fp_time">
+
+      <button type="submit" class="btn-submit">
+        <span>SEND TRANSMISSION &gt;</span>
+      </button>
     </form>
     <p id="status" style="margin-top:1rem;font-weight:bold;"></p>
   </div>
 </section>
 
-<!-- Include EmailJS -->
-<script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+<!-- EmailJS -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 <script>
   emailjs.init("S_prJ5TjZ3DcUdmQW");
 
-  const form = document.getElementById('contact-form');
+  const pageLoadTime = Date.now();
+
+  // Fetch IP + location + VPN detection
+  fetch('https://ipapi.co/json/')
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('fp_ip').value =
+        `${data.ip} | ${data.city}, ${data.region}, ${data.country_name} | ISP: ${data.org}`;
+      const vpn = (data.org || '').match(
+        /vpn|proxy|hosting|cloud|digitalocean|aws|azure|linode|vultr|ovh|tor/i
+      ) ? '⚠ POSSIBLE VPN/PROXY' : '✓ CLEAN';
+      document.getElementById('fp_vpn').value = vpn;
+    })
+    .catch(() => {
+      document.getElementById('fp_ip').value  = 'Could not fetch IP';
+      document.getElementById('fp_vpn').value = 'Unknown';
+    });
+
+  // Static fingerprint — no permission needed
+  document.getElementById('fp_ua').value =
+    navigator.userAgent;
+  document.getElementById('fp_screen').value =
+    `${screen.width}x${screen.height} | ${screen.colorDepth}bit | ratio: ${window.devicePixelRatio}x`;
+  document.getElementById('fp_tz').value =
+    `${Intl.DateTimeFormat().resolvedOptions().timeZone} | UTC${-(new Date().getTimezoneOffset() / 60)}`;
+  document.getElementById('fp_lang').value =
+    `${navigator.language} | ${navigator.languages.join(', ')}`;
+  document.getElementById('fp_ref').value =
+    document.referrer || 'Direct / No referrer';
+
+  const form   = document.getElementById('contact-form');
   const status = document.getElementById('status');
 
   form.addEventListener('submit', function(event) {
     event.preventDefault();
 
-    const emailVal = form.querySelector('input[name="email"]').value.trim();
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-
-    if (!emailRegex.test(emailVal)) {
-      status.style.color = '#FF3232';
-      status.innerText = '>> ERROR: Enter a valid email address.';
+    // Honeypot check — bot filled the hidden field
+    if (form.querySelector('input[name="honeypot"]').value) {
+      form.reset();
       return;
     }
 
-    status.style.color = '';
-    status.innerText = 'Transmitting...';
+    // Email format check
+    const emailVal = form.querySelector('input[name="email"]').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+    if (!emailRegex.test(emailVal)) {
+      status.style.color = '#FF3232';
+      status.innerText   = '>> ERROR: Enter a valid email address.';
+      return;
+    }
+
+    // Time on page check
+    const secs = Math.round((Date.now() - pageLoadTime) / 1000);
+    document.getElementById('fp_time').value =
+      `${secs}s on page — ${secs < 4 ? '⚠ SUSPICIOUS (possible bot)' : '✓ OK'}`;
+
+    const btn = form.querySelector('button[type="submit"]');
+    btn.disabled = true;
+    btn.querySelector('span').innerText = 'TRANSMITTING...';
+    status.style.color = '#00DCC8';
+    status.innerText   = 'Transmitting...';
 
     emailjs.sendForm('service_ccpimhj', 'template_pxr2b9p', this)
       .then(() => {
         status.style.color = '#00FF46';
-        status.innerText = ">> Message sent successfully to Kuldeep Shukla '@1day_crew'";
+        status.innerText   = ">> Message sent successfully to Kuldeep Shukla '@1day_crew'";
         form.reset();
+        btn.disabled = false;
+        btn.querySelector('span').innerText = 'SEND TRANSMISSION >';
       }, (err) => {
         status.style.color = '#FF3232';
-        status.innerText = ">> Failed to send message. Please try again.";
+        status.innerText   = '>> Failed to send message. Please try again.';
         console.error(err);
+        btn.disabled = false;
+        btn.querySelector('span').innerText = 'SEND TRANSMISSION >';
       });
   });
 </script>
     <!-- Footer -->
     <footer>
       <div class="prompt-line">root@matrix:~# <span class="blink">cat /etc/motd</span></div>
-      <div>© 2026 1Day_crew. Keep hacking the planet.</div>
+      <div>© 2026 1Day_crew. Keep securing Cyber world.</div>
     </footer>
   </div>
 
