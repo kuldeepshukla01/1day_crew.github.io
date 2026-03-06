@@ -626,22 +626,34 @@
 <!-- Include EmailJS -->
 <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
 <script>
-  // Initialize EmailJS
-  emailjs.init("S_prJ5TjZ3DcUdmQW"); // ← replace with your EmailJS public key
+  emailjs.init("S_prJ5TjZ3DcUdmQW");
 
   const form = document.getElementById('contact-form');
   const status = document.getElementById('status');
 
   form.addEventListener('submit', function(event) {
-    event.preventDefault(); // prevent default form submission
+    event.preventDefault();
 
-    // Send the form using EmailJS
+    const emailVal = form.querySelector('input[name="email"]').value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+
+    if (!emailRegex.test(emailVal)) {
+      status.style.color = '#FF3232';
+      status.innerText = '>> ERROR: Enter a valid email address.';
+      return;
+    }
+
+    status.style.color = '';
+    status.innerText = 'Transmitting...';
+
     emailjs.sendForm('service_ccpimhj', 'template_pxr2b9p', this)
       .then(() => {
-        status.innerText = "Message sent successfully to Kuldeep Shukla '@1day_crew'";
+        status.style.color = '#00FF46';
+        status.innerText = ">> Message sent successfully to Kuldeep Shukla '@1day_crew'";
         form.reset();
       }, (err) => {
-        status.innerText = "Failed to send message. Please try again.";
+        status.style.color = '#FF3232';
+        status.innerText = ">> Failed to send message. Please try again.";
         console.error(err);
       });
   });
